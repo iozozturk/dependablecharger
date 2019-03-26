@@ -16,7 +16,7 @@ class TariffService {
       tariffs += (tariff.startDate -> tariff)
       TariffSaveResult(success = true, None)
     } else {
-      TariffSaveResult(success = false, Some("tariff with the start date already exist. tariff owner="))
+      TariffSaveResult(success = false, Some(s"tariff with the start date already exist. tariff owner=${tariff.user}"))
     }
 
   }

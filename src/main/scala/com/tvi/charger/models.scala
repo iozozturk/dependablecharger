@@ -3,24 +3,23 @@ package com.tvi.charger
 import java.time.Instant
 import java.util.Currency
 
-import play.api.libs.json._
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json._
 
 object models {
 
-  case class Tariff(energyFee: EnergyFee, parkingFee: Option[ParkingFee], serviceFee: ServiceFee, currency: Currency, startDate: Instant, user:String)
-
-  case class EnergyFee(value: BigDecimal) {
-    require(value >= 0, "energy fee should be >= 0")
+  case class Tariff(energyFee: EnergyFee, parkingFee: Option[ParkingFee], serviceFee: ServiceFee, currency: Currency, startDate: Instant, user: String) {
+    require(startDate.getEpochSecond >= Instant.now().getEpochSecond, "tariff start date cannot be a past date")
+    require(energyFee.value >= 0, "energy fee should be >= 0")
+    require(parkingFee.map(_.value).getOrElse(BigDecimal(0)) >= 0, "parking fee should be >= 0")
+    require(serviceFee.value > 0.0 && serviceFee.value <= 0.5, "service fee should be between 0.1 and 0.5")
   }
 
-  case class ParkingFee(value: BigDecimal) {
-    require(value >= 0, "parking fee should be >= 0")
-  }
+  case class EnergyFee(value: BigDecimal) extends AnyVal
 
-  case class ServiceFee(value: Double) {
-    require(value > 0.0 && value <= 0.5, "service fee should be between 0.1 and 0.5")
-  }
+  case class ParkingFee(value: BigDecimal) extends AnyVal
+
+  case class ServiceFee(value: Double) extends AnyVal
 
   object codecs {
     implicit val tariffWrites: Writes[Tariff] = (tariff: Tariff) => Json.obj(
