@@ -18,11 +18,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 class Api(apiConfig: ApiConfig, tariffService: TariffService)(
-  implicit val system: ActorSystem,
+  implicit val actorSystem: ActorSystem,
   val materializer: Materializer,
   val executionContext: ExecutionContext
 ) extends PlayJsonSupport {
-  val logger = Logging(system.eventStream, "charger-api")
+  val logger = Logging(actorSystem.eventStream, "charger-api")
 
   def init(): Future[Http.ServerBinding] = {
     val (host, port) = (apiConfig.host, apiConfig.port)
@@ -32,20 +32,20 @@ class Api(apiConfig: ApiConfig, tariffService: TariffService)(
     }
   }
 
-  def simpleAuthenticator(credentials: Credentials): Option[String] =
+  private def simpleAuthenticator(credentials: Credentials): Option[String] =
     credentials match {
       case p@Credentials.Provided(id) if p.verify("password") => Some(id)
       case _ => None
     }
 
-  implicit def exceptionHandler: ExceptionHandler =
+  private implicit def exceptionHandler: ExceptionHandler =
     ExceptionHandler {
       case NonFatal(e) =>
         logger.error(message = e.getMessage, cause = e)
         complete(HttpResponse(InternalServerError, entity = "server encountered an error, we are monitoring it."))
     }
 
-  def logEntry(req: HttpRequest): LogEntry = {
+  private def logEntry(req: HttpRequest) = {
     LogEntry(s"${req.method.value} ${req.uri.path}", Logging.InfoLevel)
   }
 

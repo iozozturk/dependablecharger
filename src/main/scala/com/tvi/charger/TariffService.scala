@@ -2,13 +2,16 @@ package com.tvi.charger
 
 import java.time.Instant
 
+import akka.actor.ActorSystem
+import akka.event.Logging
 import com.tvi.charger.models.Tariff
 
 import scala.collection.mutable
 
 case class TariffSaveResult(success: Boolean, reason: Option[String])
 
-class TariffService {
+class TariffService()(implicit val actorSystem: ActorSystem) {
+  private val logger = Logging(actorSystem.eventStream, "charger-api")
   private val tariffs = mutable.Map[Instant, Tariff]()
 
   def save(tariff: Tariff): TariffSaveResult = {
@@ -16,9 +19,10 @@ class TariffService {
       tariffs += (tariff.startDate -> tariff)
       TariffSaveResult(success = true, None)
     } else {
-      TariffSaveResult(success = false, Some(s"tariff with the start date already exist. tariff owner=${tariff.user}"))
+      val existingTariff = tariffs(tariff.startDate)
+      logger.info(s"tariff not saved, reason=duplicate-start-date, existing-owner=${existingTariff.user} tariff=$tariff")
+      TariffSaveResult(success = false, Some(s"tariff with the start date already exist. tariff owner=${existingTariff.user}"))
     }
-
   }
 
 }
