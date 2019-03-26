@@ -3,7 +3,7 @@ package com.tvi.charger
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.{ContentType, HttpEntity, HttpResponse, MediaTypes}
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
@@ -12,11 +12,13 @@ import akka.stream.Materializer
 import com.tvi.charger.models.Tariff
 import com.tvi.charger.models.codecs._
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
-
+import play.api.libs.json.Json
+import akka.http.scaladsl.model.ContentTypes._
+import akka.http.scaladsl.model.headers.`Content-Type`
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-class Api(apiConfig: ApiConfig)(
+class Api(apiConfig: ApiConfig, tariffService: TariffService)(
   implicit val system: ActorSystem,
   val materializer: Materializer,
   val executionContext: ExecutionContext
@@ -48,8 +50,12 @@ class Api(apiConfig: ApiConfig)(
     path("tariffs") {
       authenticateBasic(realm = "tariff space", myUserPassAuthenticator) { userName =>
         (post & entity(as[Tariff])) { tariff =>
-          logger.info(s"new tariff for user:$userName, tariff=$tariff")
-          complete(OK)
+          logger.info(s"new tariff, user:$userName, tariff=${Json.toJson(tariff).toString()}")
+          val tariffWithUser = tariff.copy(user = userName)
+          tariffService.save(tariffWithUser) match {
+            case result: TariffSaveResult if result.success => complete(OK, List(`Content-Type`(`application/json`)), tariffWithUser)
+            case result: TariffSaveResult => complete(Forbidden, result.reason.getOrElse(""))
+          }
         }
       }
     }

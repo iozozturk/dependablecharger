@@ -18,8 +18,9 @@ object Application extends App {
 
   val config = ConfigFactory.load
   val apiConfig = ApiConfig(config, system)
+  val tariffService = new TariffService()
 
-  private val eventualBinding = new Api(apiConfig).init()
+  private val eventualBinding = new Api(apiConfig, tariffService).init()
 
   CoordinatedShutdown(system).addTask(CoordinatedShutdown.PhaseServiceUnbind, "service_shutdown") { () =>
     logger.info("shutting down gracefully, terminating connections")
