@@ -18,6 +18,8 @@ object models {
   case class ChargeSession(user: User, startDate: Instant, endDate: Instant, energyConsumed: EnergyKwh) {
     require(startDate.toEpochMilli <= Instant.now().toEpochMilli, "start date must be in the past")
     require(endDate.toEpochMilli <= Instant.now().toEpochMilli, "end date must be in the past")
+    require(energyConsumed.value >= 0, "energy consumed cannot be negative")
+    require(endDate.toEpochMilli >= startDate.toEpochMilli, "end date cannot be smaller than start date")
   }
 
   case class EnergyFee(value: BigDecimal) extends AnyVal
