@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.server.directives.{Credentials, LogEntry}
 import akka.stream.Materializer
-import com.tvi.charger.models.Tariff
+import com.tvi.charger.models.{ChargeSession, Tariff, User}
 import com.tvi.charger.models.codecs._
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.Json
@@ -17,7 +17,7 @@ import play.api.libs.json.Json
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-class Api(apiConfig: ApiConfig, tariffService: TariffService)(
+class Api(apiConfig: ApiConfig, tariffService: TariffService, chargeSessionService: ChargeSessionService)(
   implicit val actorSystem: ActorSystem,
   val materializer: Materializer,
   val executionContext: ExecutionContext
@@ -54,13 +54,21 @@ class Api(apiConfig: ApiConfig, tariffService: TariffService)(
       authenticateBasic(realm = "tariff space", simpleAuthenticator) { userName =>
         (post & entity(as[Tariff])) { tariff =>
           logRequest(logEntry _) {
-            val tariffWithUser = tariff.copy(user = userName)
+            val tariffWithUser = tariff.copy(user = User(userName))
             logger.info(s"new tariff, user:$userName, tariff=${Json.toJson(tariffWithUser).toString()}")
             tariffService.save(tariffWithUser) match {
               case result: TariffSaveResult if result.success => complete(OK, tariffWithUser)
               case result: TariffSaveResult => complete(Forbidden, result.reason.getOrElse(""))
             }
           }
+        }
+      }
+    } ~ path("sessions") {
+      (post & entity(as[ChargeSession])) { session =>
+        logRequest(logEntry _) {
+          logger.info(s"new session, session=${Json.toJson(session).toString()}")
+          chargeSessionService.save(session)
+          complete(OK)
         }
       }
     }

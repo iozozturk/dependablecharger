@@ -20,8 +20,8 @@ class TariffService()(implicit val actorSystem: ActorSystem) {
       TariffSaveResult(success = true, None)
     } else {
       val existingTariff = tariffs(tariff.startDate)
-      logger.info(s"tariff not saved, reason=duplicate-start-date, existing-owner=${existingTariff.user} tariff=$tariff")
-      TariffSaveResult(success = false, Some(s"tariff with the start date already exist. tariff owner=${existingTariff.user}"))
+      logger.info(s"tariff not saved, reason=duplicate-start-date, existing-owner=${existingTariff.user.value} tariff=$tariff")
+      TariffSaveResult(success = false, Some(s"tariff with the start date already exist. tariff owner=${existingTariff.user.value}"))
     }
   }
 
