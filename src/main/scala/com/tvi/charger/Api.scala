@@ -68,6 +68,7 @@ class Api(apiConfig: ApiConfig, tariffService: TariffService, chargeSessionServi
         logRequest(logEntry _) {
           logger.info(s"new session, session=${Json.toJson(session).toString()}")
           chargeSessionService.save(session)
+          chargeSessionService.charge(session, tariffService.findTariff(session.startDate))
           complete(OK)
         }
       }

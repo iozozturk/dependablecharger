@@ -56,7 +56,7 @@ object models {
     )
 
     implicit val sessionReads: Reads[ChargeSession] = (
-      (JsPath \ "user").read[BigDecimal].map(EnergyFee) and
+      (JsPath \ "user").read[String].map(User) and
         (JsPath \ "startDate").read[Instant] and
         (JsPath \ "endDate").read[Instant] and
         (JsPath \ "energyConsumed").read[Int].map(EnergyKwh)

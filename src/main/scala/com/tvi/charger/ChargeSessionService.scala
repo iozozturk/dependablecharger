@@ -2,7 +2,7 @@ package com.tvi.charger
 
 import akka.actor.ActorSystem
 import akka.event.Logging
-import com.tvi.charger.models.{ChargeSession, User}
+import com.tvi.charger.models.{ChargeSession, Tariff, User}
 
 import scala.collection.mutable
 
@@ -17,6 +17,10 @@ class ChargeSessionService()(implicit val actorSystem: ActorSystem) {
       sessions(session.user) = Seq(session)
     }
     logger.info(s"charge session saved, session=$session")
+  }
+
+  def charge(session:ChargeSession, tariff:Tariff)={
+
   }
 
 }

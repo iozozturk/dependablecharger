@@ -12,7 +12,7 @@ case class TariffSaveResult(success: Boolean, reason: Option[String])
 
 class TariffService()(implicit val actorSystem: ActorSystem) {
   private val logger = Logging(actorSystem.eventStream, "charger-api")
-  private val tariffs = mutable.Map[Instant, Tariff]()
+  private[charger] val tariffs = mutable.Map[Instant, Tariff]()
 
   def save(tariff: Tariff): TariffSaveResult = {
     if (!tariffs.contains(tariff.startDate)) {
@@ -23,6 +23,14 @@ class TariffService()(implicit val actorSystem: ActorSystem) {
       logger.info(s"tariff not saved, reason=duplicate-start-date, existing-owner=${existingTariff.user.value} tariff=$tariff")
       TariffSaveResult(success = false, Some(s"tariff with the start date already exist. tariff owner=${existingTariff.user.value}"))
     }
+  }
+
+  def findTariff(date: Instant): Tariff = {
+    val closestStartDate = tariffs.keySet.minBy { startDate =>
+      val diff = date.getEpochSecond - startDate.getEpochSecond
+      if (diff < 0) Int.MaxValue else diff
+    }
+    tariffs(closestStartDate)
   }
 
 }

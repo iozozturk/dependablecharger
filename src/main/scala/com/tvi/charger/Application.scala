@@ -19,8 +19,9 @@ object Application extends App {
   private val config = ConfigFactory.load
   private val apiConfig = ApiConfig(config, actorSystem)
   private val tariffService = new TariffService()
+  private val sessionService = new ChargeSessionService()
 
-  private val eventualBinding = new Api(apiConfig, tariffService).init()
+  private val eventualBinding = new Api(apiConfig, tariffService, sessionService).init()
 
   CoordinatedShutdown(actorSystem).addTask(CoordinatedShutdown.PhaseServiceUnbind, "service_shutdown") { () =>
     logger.info("shutting down gracefully, terminating connections")
