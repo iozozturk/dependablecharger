@@ -11,12 +11,13 @@ import scala.collection.mutable
 case class TariffSaveResult(success: Boolean, reason: Option[String])
 
 class TariffService()(implicit val actorSystem: ActorSystem) {
-  private val logger = Logging(actorSystem.eventStream, "charger-api")
+  private val logger = Logging(actorSystem.eventStream, "tariff-service")
   private[charger] val tariffs = mutable.Map[Instant, Tariff]()
 
   def save(tariff: Tariff): TariffSaveResult = {
     if (!tariffs.contains(tariff.startDate)) {
       tariffs += (tariff.startDate -> tariff)
+      logger.info(s"tariff saved, tariff=$tariff")
       TariffSaveResult(success = true, None)
     } else {
       val existingTariff = tariffs(tariff.startDate)

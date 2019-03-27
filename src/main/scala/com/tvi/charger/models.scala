@@ -62,7 +62,7 @@ object models {
         (JsPath \ "startDate").read[Instant] and
         (JsPath \ "endDate").read[Instant] and
         (JsPath \ "energyConsumed").read[Int].map(EnergyKwh)
-      ) (ChargeSession.apply(_, _, _, _))
+      ) (ChargeSession)
   }
 
 }
