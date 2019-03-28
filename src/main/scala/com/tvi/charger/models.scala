@@ -22,6 +22,9 @@ object models {
     require(endDate.toEpochMilli >= startDate.toEpochMilli, "end date cannot be smaller than start date")
   }
 
+  case class ChargingBill(energyCost: EnergyCost, parkingCost: Option[ParkingCost], serviceCost: ServiceCost, totalChargingCost: TotalChargingCost, currency: Currency, tariff: Tariff, session: ChargeSession)
+
+
   case class EnergyFee(value: BigDecimal) extends AnyVal
 
   case class ParkingFee(value: BigDecimal) extends AnyVal
@@ -31,6 +34,14 @@ object models {
   case class User(value: String) extends AnyVal
 
   case class EnergyKwh(value: Int) extends AnyVal
+
+  case class EnergyCost(value: BigDecimal) extends AnyVal
+
+  case class ParkingCost(value: BigDecimal) extends AnyVal
+
+  case class ServiceCost(value: BigDecimal) extends AnyVal
+
+  case class TotalChargingCost(value: BigDecimal) extends AnyVal
 
   object codecs {
 
@@ -63,6 +74,15 @@ object models {
         (JsPath \ "endDate").read[Instant] and
         (JsPath \ "energyConsumed").read[Int].map(EnergyKwh)
       ) (ChargeSession)
+
+    implicit val chargingBillWrites: Writes[ChargingBill] = (chargingBill: ChargingBill) => Json.obj(
+      "energyCost" -> chargingBill.energyCost.value,
+      "serviceCost" -> chargingBill.serviceCost.value,
+      "totalChargingCost" -> chargingBill.totalChargingCost.value,
+      "currency" -> chargingBill.currency.getCurrencyCode,
+      "tariff" -> chargingBill.tariff,
+      "session" -> chargingBill.session
+    ) ++ chargingBill.parkingCost.map(cost => Json.obj("parkingCost" -> cost.value)).getOrElse(Json.obj())
   }
 
 }

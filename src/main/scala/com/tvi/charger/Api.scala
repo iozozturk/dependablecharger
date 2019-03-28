@@ -68,8 +68,8 @@ class Api(apiConfig: ApiConfig, tariffService: TariffService, chargeSessionServi
         logRequest(logEntry _) {
           logger.info(s"new session, session=${Json.toJson(session).toString()}")
           chargeSessionService.save(session)
-          val chargeCostResult = chargeSessionService.charge(session, tariffService.findTariff(session.startDate))
-          complete(OK, s"cost=${chargeCostResult.totalCost} ${chargeCostResult.tariff.currency}")
+          val chargingBill = chargeSessionService.charge(session, tariffService.findTariff(session.startDate))
+          complete(OK, chargingBill)
         }
       }
     }

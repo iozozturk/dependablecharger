@@ -10,8 +10,6 @@ import play.api.libs.json.Json
 import scala.collection.mutable
 import models.codecs._
 
-case class ChargeCostResult(totalCost: BigDecimal, tariff: Tariff)
-
 class ChargeSessionService()(implicit val actorSystem: ActorSystem) {
   private val logger = Logging(actorSystem.eventStream, "charge-session-service")
   private val sessions = mutable.Map[User, Seq[ChargeSession]]()
@@ -25,13 +23,13 @@ class ChargeSessionService()(implicit val actorSystem: ActorSystem) {
     logger.info(s"charge session saved, session=${Json.toJson(session).toString()}")
   }
 
-  def charge(session: ChargeSession, tariff: Tariff) = {
+  def charge(session: ChargeSession, tariff: Tariff): ChargingBill = {
     val energyCost = computeSessionEnergyCost(session.energyConsumed, tariff.energyFee)
     val parkingCost = computeSessionParkingCost(session.startDate, session.endDate, tariff.parkingFee)
     val combinedCost = energyCost + parkingCost.getOrElse(0)
     val serviceCost = computeSessionServiceCost(combinedCost, tariff.serviceFee)
     val totalCost = energyCost + parkingCost.getOrElse(0) + serviceCost
-    ChargeCostResult(totalCost, tariff)
+    ChargingBill(EnergyCost(energyCost), parkingCost.map(ParkingCost), ServiceCost(serviceCost), TotalChargingCost(totalCost), tariff.currency, tariff, session)
   }
 
   private def computeSessionEnergyCost(energyKwh: EnergyKwh, energyFee: EnergyFee): BigDecimal = {
