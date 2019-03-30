@@ -93,6 +93,12 @@ class ModelsTest extends WordSpec with Matchers with MockitoSugar {
       endDate = Instant.parse("2010-01-20T16:30:50Z"),
       energyConsumed = EnergyKwh(1)
     )
+    val chargeSessionWithEmptyUser = ChargeSession(
+      user = User(""),
+      startDate = Instant.parse("2010-01-19T16:30:50Z"),
+      endDate = Instant.parse("2010-01-20T16:30:50Z"),
+      energyConsumed = EnergyKwh(1)
+    )
 
     val chargeSessionJson =
       """
@@ -107,8 +113,8 @@ class ModelsTest extends WordSpec with Matchers with MockitoSugar {
     "serialize into json" in {
       Json.toJson(chargeSession) shouldEqual Json.parse(chargeSessionJson)
     }
-    "deserialize from json" in {
-      Json.parse(chargeSessionJson).as[ChargeSession] shouldEqual chargeSession
+    "deserialize from json skipping user info" in {
+      Json.parse(chargeSessionJson).as[ChargeSession] shouldEqual chargeSessionWithEmptyUser
     }
 
     "throw exception when start date is in the future" in {
@@ -136,6 +142,63 @@ class ModelsTest extends WordSpec with Matchers with MockitoSugar {
         endDate = Instant.parse("2010-01-10T16:30:50Z"),
         energyConsumed = EnergyKwh(-1)
       )
+    }
+  }
+
+  "CharginBill model" should {
+    val chargeSession = ChargeSession(
+      user = User("ismet"),
+      startDate = Instant.parse("2010-01-19T16:30:50Z"),
+      endDate = Instant.parse("2010-01-20T16:30:50Z"),
+      energyConsumed = EnergyKwh(1)
+    )
+
+    val tariff = Tariff(
+      energyFee = EnergyFee(1),
+      parkingFee = Some(ParkingFee(1)),
+      serviceFee = ServiceFee(0.1),
+      currency = Currency.getInstance("EUR"),
+      startDate = Instant.parse("2020-01-19T16:30:50Z"),
+      user = User("ismet")
+    )
+
+    val chargingBill = ChargingBill(
+      energyCost = EnergyCost(1),
+      parkingCost = Some(ParkingCost(1)),
+      serviceCost = ServiceCost(1),
+      totalChargingCost = TotalChargingCost(1),
+      currency = Currency.getInstance("EUR"),
+      tariff = tariff,
+      session = chargeSession
+    )
+
+    val chargingBillJson =
+      """
+        |{
+        |  "totalChargingCost": 1,
+        |  "serviceCost": 1,
+        |  "session": {
+        |    "user": "ismet",
+        |    "startDate": "2010-01-19T16:30:50Z",
+        |    "endDate": "2010-01-20T16:30:50Z",
+        |    "energyConsumed": 1
+        |  },
+        |  "currency": "EUR",
+        |  "tariff": {
+        |    "serviceFee": 0.1,
+        |    "parkingFee": 1,
+        |    "currency": "EUR",
+        |    "energyFee": 1,
+        |    "user": "ismet",
+        |    "startDate": "2020-01-19T16:30:50Z"
+        |  },
+        |  "parkingCost": 1,
+        |  "energyCost": 1
+        |}
+      """.stripMargin
+
+    "serialize into json" in {
+      Json.toJson(chargingBill) shouldEqual Json.parse(chargingBillJson)
     }
   }
 
