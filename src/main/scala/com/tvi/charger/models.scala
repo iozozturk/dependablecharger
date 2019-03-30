@@ -69,11 +69,10 @@ object models {
     )
 
     implicit val sessionReads: Reads[ChargeSession] = (
-      (JsPath \ "user").read[String].map(User) and
-        (JsPath \ "startDate").read[Instant] and
+      (JsPath \ "startDate").read[Instant] and
         (JsPath \ "endDate").read[Instant] and
         (JsPath \ "energyConsumed").read[Int].map(EnergyKwh)
-      ) (ChargeSession)
+      ) (ChargeSession(User(""), _, _, _))
 
     implicit val chargingBillWrites: Writes[ChargingBill] = (chargingBill: ChargingBill) => Json.obj(
       "energyCost" -> chargingBill.energyCost.value,
@@ -83,6 +82,7 @@ object models {
       "tariff" -> chargingBill.tariff,
       "session" -> chargingBill.session
     ) ++ chargingBill.parkingCost.map(cost => Json.obj("parkingCost" -> cost.value)).getOrElse(Json.obj())
+
   }
 
 }

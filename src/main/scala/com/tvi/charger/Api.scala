@@ -5,19 +5,20 @@ import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.server.directives.{Credentials, LogEntry}
 import akka.stream.Materializer
-import com.tvi.charger.models.{ChargeSession, Tariff, User}
 import com.tvi.charger.models.codecs._
+import com.tvi.charger.models.{ChargeSession, Tariff, User}
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-class Api(apiConfig: ApiConfig, tariffService: TariffService, chargeSessionService: ChargeSessionService)(
+class Api(apiConfig: ApiConfig, tariffService: TariffService, billingService: BillingService)(
   implicit val actorSystem: ActorSystem,
   val materializer: Materializer,
   val executionContext: ExecutionContext
@@ -66,11 +67,24 @@ class Api(apiConfig: ApiConfig, tariffService: TariffService, chargeSessionServi
     } ~ path("sessions") {
       (post & entity(as[ChargeSession])) { session =>
         logRequest(logEntry _) {
-          logger.info(s"new session, session=${Json.toJson(session).toString()}")
-          chargeSessionService.save(session)
-          val chargingBill = chargeSessionService.charge(session, tariffService.findTariff(session.startDate))
-          complete(OK, chargingBill)
+          headerValueByName("X-User") { user =>
+            val sessionWithUser = session.copy(user = User(user))
+            logger.info(s"new session, session=${Json.toJson(sessionWithUser).toString()}")
+            val chargingBill = billingService.saveAndCharge(sessionWithUser, tariffService.getTariff(session.startDate))
+            complete(OK, chargingBill)
+          }
         }
-      }
+      } ~
+        get {
+          logRequest(logEntry _) {
+            headerValueByName("X-User") { user =>
+              val headers = List(RawHeader("Content-Disposition", s"attachment; filename=billing-report.csv"))
+              val source = billingService.billingReportAsSource(User(user))
+              respondWithHeaders(headers) {
+                complete(HttpEntity(ContentTypes.`text/csv(UTF-8)`, source))
+              }
+            }
+          }
+        }
     }
 }
