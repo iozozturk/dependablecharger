@@ -14,7 +14,7 @@ class BillingRepositoryTest extends WordSpec with Matchers with MockitoSugar wit
     fixture.cleanBillingState()
   }
 
-  "TariffRepositoryTest" should {
+  "Billing repository" should {
 
     val chargeSession = ChargeSession(
       user = User("ismet"),

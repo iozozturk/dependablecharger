@@ -50,7 +50,7 @@ class Api(apiConfig: ApiConfig, tariffService: TariffService, billingService: Bi
     LogEntry(s"${req.method.value} ${req.uri.path}", Logging.InfoLevel)
   }
 
-  private val route =
+  private[charger] val route =
     path("tariffs") {
       authenticateBasic(realm = "tariff space", simpleAuthenticator) { userName =>
         (post & entity(as[Tariff])) { tariff =>

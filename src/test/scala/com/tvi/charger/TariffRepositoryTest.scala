@@ -14,7 +14,7 @@ class TariffRepositoryTest extends WordSpec with Matchers with MockitoSugar with
     fixture.cleanTariffState()
   }
 
-  "TariffRepositoryTest" should {
+  "Tariff repository" should {
 
     "save new tariff" in {
       val tariff = Tariff(EnergyFee(1), Some(ParkingFee(1)), ServiceFee(0.1), Currency.getInstance("EUR"), Instant.parse("2119-03-27T00:00:50Z"), User("ismet"))
