@@ -4,13 +4,19 @@ import java.time.Instant
 import java.util.Currency
 
 import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.Sink
 import com.tvi.charger.models._
 import org.mockito.Mockito.when
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 
+import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
+
 class BillingServiceTest extends WordSpec with Matchers with MockitoSugar {
   private implicit val actorSystem: ActorSystem = ActorSystem()
+  private implicit val materializer: ActorMaterializer = ActorMaterializer()
   private val mockBillingRepo = mock[BillingRepository]
   private val billingServiceInTest = new BillingService(mockBillingRepo)
 
@@ -54,6 +60,16 @@ class BillingServiceTest extends WordSpec with Matchers with MockitoSugar {
       )
       when(mockBillingRepo.saveChargingBill(billWithTenSecondParking)) thenReturn BillingSaveResult(success = true, None)
       billingServiceInTest.saveAndCharge(tenSecondParking, tariff) shouldEqual billWithTenSecondParking
+    }
+
+    "report billing of user as a csv source" in {
+      when(mockBillingRepo.getUserBills(chargeSession.user)) thenReturn Seq(chargingBill)
+
+      val userReportSource = billingServiceInTest.billingReportAsSource(chargeSession.user)
+      val csvLinesInBytes = Await.result(userReportSource.take(2).runWith(Sink.seq), 3.second)
+      val csvLines = csvLinesInBytes.map(_.utf8String)
+      csvLines.head shouldEqual "currency, tariff  energy  fee , tariff  parking  fee , tariff  service  fee , session  start  date , session  end  date , session  energy  consumed , energy  cost , parking  cost , service  cost , total  cost  to  pay \r\n"
+      csvLines(1) shouldEqual "EUR,1,1,0.1,2010-01-19T16:30:50Z,2010-01-20T16:30:50Z,1.0,1,24.0,2.5,27.5\r\n"
     }
 
 

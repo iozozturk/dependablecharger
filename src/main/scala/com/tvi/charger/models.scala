@@ -33,7 +33,7 @@ object models {
 
   case class User(value: String) extends AnyVal
 
-  case class EnergyKwh(value: Int) extends AnyVal
+  case class EnergyKwh(value: Double) extends AnyVal
 
   case class EnergyCost(value: BigDecimal) extends AnyVal
 
@@ -71,7 +71,7 @@ object models {
     implicit val sessionReads: Reads[ChargeSession] = (
       (JsPath \ "startDate").read[Instant] and
         (JsPath \ "endDate").read[Instant] and
-        (JsPath \ "energyConsumed").read[Int].map(EnergyKwh)
+        (JsPath \ "energyConsumed").read[Double].map(EnergyKwh)
       ) (ChargeSession(User(""), _, _, _))
 
     implicit val chargingBillWrites: Writes[ChargingBill] = (chargingBill: ChargingBill) => Json.obj(
