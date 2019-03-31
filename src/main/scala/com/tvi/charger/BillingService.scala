@@ -9,6 +9,7 @@ import akka.util.ByteString
 import com.tvi.charger.models._
 
 import scala.collection.mutable
+import scala.math.BigDecimal.RoundingMode
 
 class BillingService(billingRepository: BillingRepository) {
 
@@ -55,18 +56,18 @@ class BillingService(billingRepository: BillingRepository) {
   }
 
   private def computeSessionEnergyCost(energyKwh: EnergyKwh, energyFee: EnergyFee): BigDecimal = {
-    energyFee.value * energyKwh.value
+    (energyFee.value * energyKwh.value).setScale(2, RoundingMode.HALF_UP)
   }
 
   private def computeSessionParkingCost(startDate: Instant, endDate: Instant, parkingFee: Option[ParkingFee]): Option[BigDecimal] = {
     parkingFee.map { fee =>
       val durationInSeconds = endDate.getEpochSecond - startDate.getEpochSecond
-      val durationInHours = Math.ceil(durationInSeconds.toDouble / (60 * 60).toDouble)
-      fee.value * durationInHours
+      val feePerSecond = fee.value / (60 * 60)
+      (feePerSecond * durationInSeconds).setScale(2, RoundingMode.HALF_UP)
     }
   }
 
   private def computeSessionServiceCost(calculatedCost: BigDecimal, serviceFee: ServiceFee) = {
-    calculatedCost * serviceFee.value
+    (calculatedCost * serviceFee.value).setScale(2, RoundingMode.HALF_UP)
   }
 }
