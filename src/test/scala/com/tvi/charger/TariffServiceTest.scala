@@ -14,7 +14,7 @@ class TariffServiceTest extends WordSpec with Matchers with MockitoSugar {
   private val mockTariffRepo = mock[TariffRepository]
   private val tariffServiceInTest = new TariffService(mockTariffRepo)
 
-  "TariffServiceTest" should {
+  "Tariff Service" should {
 
     "save new tariff" in {
       val tariff = Tariff(EnergyFee(1), Some(ParkingFee(1)), ServiceFee(0.1), Currency.getInstance("EUR"), Instant.parse("2119-03-27T00:00:50Z"), User("ismet"))

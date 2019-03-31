@@ -43,7 +43,7 @@ class BillingRepositoryTest extends WordSpec with Matchers with MockitoSugar wit
     )
 
     "save new charging bill" in {
-      billingRepoInTest.saveChargingBill(chargingBill)
+      billingRepoInTest.saveChargingBill(chargingBill) shouldEqual BillingSaveResult(success = true,None)
       billingRepoInTest.chargingBillsToInvoice.size shouldEqual 1
       billingRepoInTest.chargingBillsToInvoice.head shouldEqual chargingBill
 
@@ -52,8 +52,8 @@ class BillingRepositoryTest extends WordSpec with Matchers with MockitoSugar wit
     }
 
     "save subsequent new charging bills to update existing user bills" in {
-      billingRepoInTest.saveChargingBill(chargingBill)
-      billingRepoInTest.saveChargingBill(chargingBill)
+      billingRepoInTest.saveChargingBill(chargingBill) shouldEqual BillingSaveResult(success = true,None)
+      billingRepoInTest.saveChargingBill(chargingBill) shouldEqual BillingSaveResult(success = true,None)
       billingRepoInTest.chargingBillsToInvoice.size shouldEqual 2
       billingRepoInTest.chargingBillsToInvoice.head shouldEqual chargingBill
 
@@ -63,7 +63,7 @@ class BillingRepositoryTest extends WordSpec with Matchers with MockitoSugar wit
     }
 
     "get user bill" in {
-      billingRepoInTest.saveChargingBill(chargingBill)
+      billingRepoInTest.saveChargingBill(chargingBill) shouldEqual BillingSaveResult(success = true,None)
       billingRepoInTest.getUserBills(chargeSession.user).size shouldEqual 1
       billingRepoInTest.getUserBills(chargeSession.user).head shouldEqual chargingBill
     }

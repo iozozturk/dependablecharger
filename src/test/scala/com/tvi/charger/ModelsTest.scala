@@ -145,7 +145,7 @@ class ModelsTest extends WordSpec with Matchers with MockitoSugar {
     }
   }
 
-  "CharginBill model" should {
+  "ChargingBill model" should {
     val chargeSession = ChargeSession(
       user = User("ismet"),
       startDate = Instant.parse("2010-01-19T16:30:50Z"),
