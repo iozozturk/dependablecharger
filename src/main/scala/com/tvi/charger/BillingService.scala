@@ -19,8 +19,7 @@ class BillingService(billingRepository: BillingRepository) {
     val serviceCost = computeSessionServiceCost(combinedCost, tariff.serviceFee)
     val totalCost = energyCost + parkingCost.getOrElse(0) + serviceCost
     val chargingBill = ChargingBill(EnergyCost(energyCost), parkingCost.map(ParkingCost), ServiceCost(serviceCost), TotalChargingCost(totalCost), tariff.currency, tariff, session)
-    billingRepository.updateUserChargingBillStore(session.user, chargingBill)
-    billingRepository.updateChargingBillsToInvoiceStore(chargingBill)
+    billingRepository.saveChargingBill(chargingBill)
     chargingBill
   }
 

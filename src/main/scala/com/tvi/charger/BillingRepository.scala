@@ -6,18 +6,20 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class BillingRepository {
-  private val chargingBillsByUser = mutable.Map[User, Seq[ChargingBill]]()
-  private val chargingBillsToInvoice = ListBuffer[ChargingBill]()
+  private[charger] val chargingBillsByUser = mutable.Map[User, Seq[ChargingBill]]()
+  private[charger] val chargingBillsToInvoice = ListBuffer[ChargingBill]()
 
-  def updateUserChargingBillStore(user: User, chargingBill: ChargingBill): Unit = {
+  def saveChargingBill(chargingBill: ChargingBill): Unit = {
+    val user = chargingBill.session.user
     if (chargingBillsByUser.contains(user)) {
       chargingBillsByUser(user) = chargingBillsByUser(user) :+ chargingBill
     } else {
       chargingBillsByUser(user) = Seq(chargingBill)
     }
+    updateChargingBillsToInvoiceStore(chargingBill)
   }
 
-  def updateChargingBillsToInvoiceStore(chargingBill: ChargingBill): Unit = {
+  private def updateChargingBillsToInvoiceStore(chargingBill: ChargingBill): Unit = {
     chargingBillsToInvoice += chargingBill
   }
 
