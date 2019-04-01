@@ -2,6 +2,10 @@
 
 DependableCharger is a back-office system for TheVenerableInertia (TVI) that computes how much money electric vehicle drivers (aka EV drivers) owe TVI for their charging sessions.
 
+## Architecture
+
+![Architecture Diagram](./architecture.png)
+
 ## Requirements
 
 - Java8 or higher
